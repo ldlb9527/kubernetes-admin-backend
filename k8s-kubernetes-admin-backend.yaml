@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kubeadmin-backend
+  namespace: default
+  labels:
+    name: kubeadmin-deploy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: kubeadmin-pod
+  template:
+    metadata:
+      labels:
+        name: kubeadmin-pod
+    spec:
+      containers:
+        - name: "kubeadmin-backend"
+          image: kubernetes-admin-backend:v1.0.0 #注意切换正确的镜像
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 10010
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kubeadmin-service
+  namespace: default
+  labels:
+    name: kubeadmin-service
+spec:
+  selector:
+    name: kubeadmin-pod
+  type: NodePort
+  ports:
+    - name: "kube-admin"
+      port: 10010
+      targetPort: 10010
+      nodePort: 30010
