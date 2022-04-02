@@ -6,4 +6,4 @@
 #####  
 #####  本地运行会报错，需要替换证书，解决参考  https://blog.csdn.net/marlinlm/article/details/122166105
 ##### 如需测试webssh 请配置正确的账户（apis/terminal.go中） 支持password 或publickey
-##### service/terminal.go中有部分进入容器命令行的代码，未完成
+
