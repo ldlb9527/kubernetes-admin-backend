@@ -57,6 +57,7 @@ func GetRestConfig() (config *rest.Config, err error) {
 	onceConfig.Do(func() {
 		var kubeConfig *string
 		if home := homedir.HomeDir(); home != "" {
+			// windows下 home对应 C:\Users\用户名   linux home 对应 /root  这里直接将配置文件放在项目中 不用home
 			kubeConfig = flag.String("kubeConfig", filepath.Join("./config", ".kube", "config"), "absolute path to the kubeConfig file")
 		} else {
 			klog.Fatal("read config error, config is empty")
