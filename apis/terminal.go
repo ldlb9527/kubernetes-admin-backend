@@ -5,8 +5,7 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
-	"kubernetes-admin-backend/client"
-	"log"
+	"kubernetes-admin-backend/terminal"
 	"net/http"
 	"sync"
 	"time"
@@ -27,23 +26,44 @@ func init() {
 	}
 }
 
+// TerminalPod web中进入pod中的容器终端
+func TerminalPod(c *gin.Context) {
+	wsConn, err := terminal.InitWebsocket(c.Writer, c.Request)
+	if err != nil {
+		fmt.Println("InitWebsocket err", err)
+		wsConn.WsClose()
+		return
+	}
+	namespace := c.Param("namespace")
+	podName := c.Param("podName")
+	container := c.Param("container")
+
+	wsConn.WsWrite(websocket.TextMessage, []byte("你已进入 命名空间："+namespace+" 容器组："+podName+" 容器名："+container+"的终端"))
+
+	if err := terminal.StartProcess(wsConn, podName, namespace, container); err != nil {
+		fmt.Println("StartProcess err", err)
+		wsConn.WsClose()
+		return
+	}
+}
+
 // VisitorWebsocketServer https://github.com/widaT/webssh  websocket连接实现webssh
 func VisitorWebsocketServer(c *gin.Context) {
 	wsConn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
-		log.Println("upgrade error:", err)
+		fmt.Println("upgrade error:", err)
 		return
 	}
 	defer wsConn.Close()
 
-	config := &client.SSHClientConfig{
+	config := &terminal.SSHClientConfig{
 		Timeout:   time.Second * 5,
 		HostAddr:  "xxx.xxx.xxx.xxx:22",
 		User:      "*****",
 		Password:  "*****",
 		AuthModel: "PASSWORD",
 	}
-	sshClient, err := client.NewSSHClient(config)
+	sshClient, err := terminal.NewSSHClient(config)
 	if err != nil {
 		wsConn.WriteControl(websocket.CloseMessage,
 			[]byte(err.Error()), time.Now().Add(time.Second))
@@ -51,7 +71,7 @@ func VisitorWebsocketServer(c *gin.Context) {
 	}
 	defer sshClient.Close()
 
-	turn, err := client.NewTurn(wsConn, sshClient)
+	turn, err := terminal.NewTurn(wsConn, sshClient)
 	if err != nil {
 		fmt.Println("NewTurn," + err.Error())
 		wsConn.WriteControl(websocket.CloseMessage,
@@ -67,14 +87,14 @@ func VisitorWebsocketServer(c *gin.Context) {
 		defer wg.Done()
 		err := turn.LoopRead(ctx)
 		if err != nil {
-			log.Printf("%#v", err)
+			fmt.Printf("%#v", err)
 		}
 	}()
 	go func() {
 		defer wg.Done()
 		err := turn.SessionWait()
 		if err != nil {
-			log.Printf("%#v", err)
+			fmt.Printf("%#v", err)
 		}
 		cancel()
 	}()

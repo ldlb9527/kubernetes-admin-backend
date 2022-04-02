@@ -7,7 +7,8 @@ import (
 
 func CollectRoute(engine *gin.Engine) {
 
-	engine.GET("/terminal", apis.VisitorWebsocketServer)
+	engine.GET("/terminal/ssh", apis.VisitorWebsocketServer)
+	engine.GET("/terminal/pod/:podName/:namespace/:container", apis.TerminalPod)
 
 	commonGroup := engine.Group("/common")
 	commonGroup.GET("/:group/:version/:resource/:namespace/:name", apis.GetYaml)

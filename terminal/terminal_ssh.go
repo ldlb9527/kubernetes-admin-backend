@@ -1,15 +1,47 @@
-package client
+package terminal
 
 import (
 	"context"
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"io"
-
 	"github.com/gorilla/websocket"
 	"golang.org/x/crypto/ssh"
+	"io"
+	"time"
 )
+
+type SSHClientConfig struct {
+	AuthModel string
+	HostAddr  string
+	User      string
+	Password  string
+	PublicKey string
+	Timeout   time.Duration
+}
+
+func NewSSHClient(conf *SSHClientConfig) (*ssh.Client, error) {
+	config := &ssh.ClientConfig{
+		Timeout:         conf.Timeout,
+		User:            conf.User,
+		HostKeyCallback: ssh.InsecureIgnoreHostKey(), //忽略know_hosts检查
+	}
+	switch conf.AuthModel {
+	case "PASSWORD":
+		config.Auth = []ssh.AuthMethod{ssh.Password(conf.Password)}
+	case "PUBLICKEY":
+		signer, err := ssh.ParsePrivateKey([]byte(conf.PublicKey))
+		if err != nil {
+			return nil, err
+		}
+		config.Auth = []ssh.AuthMethod{ssh.PublicKeys(signer)}
+	}
+	c, err := ssh.Dial("tcp", conf.HostAddr, config)
+	if err != nil {
+		return nil, err
+	}
+	return c, nil
+}
 
 type Turn struct {
 	StdinPipe io.WriteCloser
@@ -132,14 +164,4 @@ func (t *Turn) SessionWait() error {
 func decode(p []byte) []byte {
 	decodeString, _ := base64.StdEncoding.DecodeString(string(p))
 	return decodeString
-}
-
-func encode(p []byte) []byte {
-	encodeToString := base64.StdEncoding.EncodeToString(p)
-	return []byte(encodeToString)
-}
-
-type Resize struct {
-	Columns int
-	Rows    int
 }
