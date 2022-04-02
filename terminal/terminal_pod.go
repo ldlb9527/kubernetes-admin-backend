@@ -199,15 +199,6 @@ func (handler *streamHandler) Write(p []byte) (size int, err error) {
 	return
 }
 
-func isValidBash(isValidbash []string, shell string) bool {
-	for _, isValidbash := range isValidbash {
-		if isValidbash == shell {
-			return true
-		}
-	}
-	return false
-}
-
 func StartProcess(wsConn *WsConnection, podName string, namespace string, container string) error {
 	cmd := []string{"/bin/sh"}
 	// URL:
