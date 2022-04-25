@@ -4,7 +4,6 @@ go 1.16
 
 require (
 	github.com/gin-gonic/gin v1.7.7
-	github.com/gorilla/sessions v1.2.1
 	github.com/gorilla/websocket v1.5.0
 	github.com/imdario/mergo v0.3.7 // indirect
 	github.com/prometheus/client_golang v1.12.1

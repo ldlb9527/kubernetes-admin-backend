@@ -3,28 +3,49 @@ package middleware
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"github.com/gorilla/sessions"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/push"
-	"kubernetes-admin-backend/config"
 	"time"
 )
 
-var store = sessions.NewCookieStore([]byte("bzka"))
+var WebRequestTotal = prometheus.NewCounterVec(
+	prometheus.CounterOpts{
+		Name: "web_request_total",
+		Help: "Number of requests in total",
+	},
+	// 设置两个标签 请求方法和 路径 对请求总次数在两个
+	[]string{"method", "endpoint"},
+)
 
-func monitor() gin.HandlerFunc {
+var WebRequestDuration = prometheus.NewHistogramVec(
+	prometheus.HistogramOpts{
+		Name:    "web_request_duration_seconds",
+		Help:    "web request duration distribution",
+		Buckets: []float64{0.1, 0.3, 0.5, 0.7, 0.9, 1.5},
+	},
+	[]string{"method", "endpoint"},
+)
+
+var WebActiveTotal = prometheus.NewGauge(
+	prometheus.GaugeOpts{
+		Name: "web_active_total",
+		Help: "web active total",
+	})
+
+// Monitor 监控
+func Monitor() gin.HandlerFunc {
 	// 注册监控指标
-	prometheus.MustRegister(config.WebActiveTotal)
-	prometheus.MustRegister(config.WebRequestTotal)
-	prometheus.MustRegister(config.WebRequestDuration)
+	prometheus.MustRegister(WebActiveTotal)
+	prometheus.MustRegister(WebRequestTotal)
+	prometheus.MustRegister(WebRequestDuration)
 
 	return func(c *gin.Context) {
 		start := time.Now()
 		c.Next()
 		duration := time.Since(start)
-		//config.WebActiveTotal.Set(float64(r.Session.Size()))
-		config.WebRequestTotal.With(prometheus.Labels{"method": c.Request.Method, "endpoint": c.Request.URL.Path}).Inc()
-		config.WebRequestDuration.With(prometheus.Labels{"method": c.Request.Method, "endpoint": c.Request.URL.Path}).Observe(duration.Seconds())
+		//WebActiveTotal.Set(float64(r.Session.Size()))
+		WebRequestTotal.With(prometheus.Labels{"method": c.Request.Method, "endpoint": c.Request.URL.Path}).Inc()
+		WebRequestDuration.With(prometheus.Labels{"method": c.Request.Method, "endpoint": c.Request.URL.Path}).Observe(duration.Seconds())
 	}
 
 }

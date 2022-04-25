@@ -2,10 +2,18 @@ package router
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"kubernetes-admin-backend/apis"
+	"net/http"
 )
 
 func CollectRoute(engine *gin.Engine) {
+	// prometheus 监控
+	engine.GET("/metrics", func(handler http.Handler) gin.HandlerFunc {
+		return func(c *gin.Context) {
+			handler.ServeHTTP(c.Writer, c.Request)
+		}
+	}(promhttp.Handler()))
 
 	engine.GET("/terminal/ssh", apis.VisitorWebsocketServer)
 	engine.GET("/terminal/pod/:podName/:namespace/:container", apis.TerminalPod)
