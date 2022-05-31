@@ -63,7 +63,7 @@
 ```
 ***
 * 查看k8s集群状态 `http://127.0.0.1:10010/cluster/extra/info`
-```json
+```json lines
 {
     "used_cpu": 2.0100000000000002, //已使用的cpu
     "total_cpu": 10,                //总cpu
