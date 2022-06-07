@@ -41,6 +41,9 @@ func CollectRoute(engine *gin.Engine) {
 	svcGroup := engine.Group("/svc")
 	svcGroup.GET("/list", apis.ListSvc)
 
+	eventGroup := engine.Group("/event")
+	eventGroup.GET("/list", apis.ListEvent)
+
 	configMapsGroup := engine.Group("/configmaps")
 	configMapsGroup.GET("/list", apis.ListConfigMap)
 	configMapsGroup.GET("/get/:namespace/:name", apis.GetConfigMapByName)
