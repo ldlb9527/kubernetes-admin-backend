@@ -3,12 +3,12 @@ package service
 import (
 	"context"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"kubernetes-admin-backend/client"
 	"kubernetes-admin-backend/proto"
 )
 
-func GetPods() []proto.Pod {
-	clientSet, _ := client.GetK8SClientSet()
+func GetPods(clusterName string) []proto.Pod {
+	cluster, _ := GetCluster(clusterName)
+	clientSet := cluster.ClientSet
 	podList, _ := clientSet.CoreV1().Pods("").List(context.Background(), metav1.ListOptions{})
 
 	pods := make([]proto.Pod, 0, 20)

@@ -6,18 +6,47 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/version"
 	"k8s.io/klog"
-	"kubernetes-admin-backend/client"
 	"kubernetes-admin-backend/proto"
+	"mime/multipart"
 )
 
-func Version() (*version.Info, error) {
-	clientSet, err := client.GetK8SClientSet()
-	if err != nil {
-		klog.Error(err)
-		return nil, err
-	}
+func AddCluster(name string, fileHeader *multipart.FileHeader) error {
+	defaultClusterStore := proto.DefaultClusterStore{}
+	return addCluster(defaultClusterStore, name, fileHeader)
+}
+
+func addCluster(store proto.ClusterStore, name string, fileHeader *multipart.FileHeader) error {
+	return store.AddByFile(name, fileHeader)
+}
+
+func GetClusters() []proto.Cluster {
+	defaultClusterStore := proto.DefaultClusterStore{}
+	return getClusters(defaultClusterStore)
+}
+
+func getClusters(store proto.DefaultClusterStore) []proto.Cluster {
+	return store.List()
+}
+
+func GetCluster(name string) (proto.Cluster, error) {
+	defaultClusterStore := proto.DefaultClusterStore{}
+	return defaultClusterStore.Get(name)
+}
+
+func DeleteCluster(name string) error {
+	defaultClusterStore := proto.DefaultClusterStore{}
+	return deleteCluster(defaultClusterStore, name)
+}
+
+func deleteCluster(store proto.ClusterStore, name string) error {
+	return store.Delete(name)
+}
+
+func Version(clusterName string) (*version.Info, error) {
+	cluster, _ := GetCluster(clusterName)
+	clientSet := cluster.ClientSet
+
 	version, err := clientSet.ServerVersion()
-	clientSet.ServerGroups()
 	if err != nil {
 		klog.Error(err)
 		return nil, err
@@ -25,13 +54,11 @@ func Version() (*version.Info, error) {
 	return version, nil
 }
 
-func ListClusters() ([]proto.Node, error) {
+func ListClusters(clusterName string) ([]proto.Node, error) {
+	cluster, _ := GetCluster(clusterName)
+	clientSet := cluster.ClientSet
+
 	ctx := context.Background()
-	clientSet, err := client.GetK8SClientSet()
-	if err != nil {
-		klog.Error(err)
-		return nil, err
-	}
 	nodeList, err := clientSet.CoreV1().Nodes().List(ctx, metav1.ListOptions{})
 	if err != nil {
 		klog.Error(err)
@@ -67,11 +94,12 @@ func getReadyStatus(conditions []v1.NodeCondition) string {
 	return "notfound"
 }
 
-func ExtraClusterInfo() proto.ExtraClusterInfo {
+func ExtraClusterInfo(clusterName string) proto.ExtraClusterInfo {
 	extraClusterInfo := proto.ExtraClusterInfo{0, 0, 0, 0, 0, 0}
 
 	ctx := context.Background()
-	clientSet, _ := client.GetK8SClientSet()
+	cluster, _ := GetCluster(clusterName)
+	clientSet := cluster.ClientSet
 
 	nodeList, _ := clientSet.CoreV1().Nodes().List(ctx, metav1.ListOptions{})
 	nodes := nodeList.Items
@@ -104,9 +132,10 @@ func ExtraClusterInfo() proto.ExtraClusterInfo {
 	return extraClusterInfo
 }
 
-func QueryApiGroups() []proto.ApiResource {
+func QueryApiGroups(clusterName string) []proto.ApiResource {
 	apiResources := make([]proto.ApiResource, 0, 20)
-	clientSet, _ := client.GetK8SClientSet()
+	cluster, _ := GetCluster(clusterName)
+	clientSet := cluster.ClientSet
 	_, resources, _ := clientSet.ServerGroupsAndResources()
 	for _, resource := range resources {
 		for _, api := range resource.APIResources {

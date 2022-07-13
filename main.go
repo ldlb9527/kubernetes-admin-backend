@@ -6,12 +6,13 @@ import (
 	"k8s.io/klog"
 	"kubernetes-admin-backend/config"
 	"kubernetes-admin-backend/middleware"
+	_ "kubernetes-admin-backend/proto"
 	"kubernetes-admin-backend/router"
-	"kubernetes-admin-backend/service"
 )
 
 func main() {
-	go service.Informers()  //todo informers监控
+
+	//go service.Informers()  //todo informers监控
 	engine := gin.Default() //返回默认的路由引擎
 	gin.SetMode(gin.DebugMode)
 	engine.Use(middleware.Cors(), middleware.Monitor())

@@ -5,14 +5,14 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	"kubernetes-admin-backend/client"
 	"kubernetes-admin-backend/proto"
 	"strconv"
 	"time"
 )
 
-func ListConfigMap(namespace string) []proto.ConfigMap {
-	clientSet, _ := client.GetK8SClientSet()
+func ListConfigMap(clusterName, namespace string) []proto.ConfigMap {
+	cluster, _ := GetCluster(clusterName)
+	clientSet := cluster.ClientSet
 	configMapList, _ := clientSet.CoreV1().ConfigMaps(namespace).List(context.Background(), metav1.ListOptions{})
 
 	configMaps := make([]proto.ConfigMap, 0, 10)
@@ -25,8 +25,9 @@ func ListConfigMap(namespace string) []proto.ConfigMap {
 	return configMaps
 }
 
-func GetConfigMapByName(namespace, name string) *unstructured.Unstructured {
-	dynamicClient, _ := client.GetK8SDynamicClient()
+func GetConfigMapByName(clusterName, namespace, name string) *unstructured.Unstructured {
+	cluster, _ := GetCluster(clusterName)
+	dynamicClient := cluster.DynamicClient
 	gvr := schema.GroupVersionResource{Group: "", Version: "v1", Resource: "configmaps"}
 	unstructObj, _ := dynamicClient.Resource(gvr).Namespace(namespace).Get(context.Background(), name, metav1.GetOptions{})
 

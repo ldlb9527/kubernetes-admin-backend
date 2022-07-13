@@ -30,11 +30,6 @@ type Server struct {
 
 func init() {
 	var config Config
-	/*dir, err := os.Getwd()
-	if err != nil {
-		klog.Fatal(err)
-		return
-	}*/
 	yamlFile, err := ioutil.ReadFile("./config/application.yaml")
 	if err != nil {
 		klog.Fatal(err)

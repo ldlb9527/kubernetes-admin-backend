@@ -4,11 +4,6 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/client-go/discovery"
-	"k8s.io/client-go/discovery/cached/memory"
-	"k8s.io/client-go/restmapper"
-	"kubernetes-admin-backend/client"
 	"kubernetes-admin-backend/proto"
 	"kubernetes-admin-backend/service"
 	"net/http"
@@ -17,7 +12,7 @@ import (
 
 // GetYaml 通过gvr查询资源的yaml
 func GetYaml(c *gin.Context) {
-	unstructured := service.GetYaml(c.Param("group"), c.Param("version"), c.Param("resource"),
+	unstructured := service.GetYaml(c.Param("clusterName"), c.Param("group"), c.Param("version"), c.Param("resource"),
 		c.Param("namespace"), c.Param("name"))
 	bytes, _ := yaml.Marshal(unstructured)
 
@@ -33,24 +28,21 @@ func ApplyYaml(c *gin.Context) {
 		return
 	}
 
-	unStructured := service.ApplyYaml(u)
+	clusterName := c.Param("clusterName")
+	unStructured := service.ApplyYaml(clusterName, u)
 	bytes, _ := yaml.Marshal(unStructured)
 	fmt.Println(string(bytes))
 	c.JSON(http.StatusOK, (&proto.Result{}).Ok(200, bytes, "更新yaml成功"))
 }
 
-// FindGVRs 通过yaml更新资源 如果不存在
+// FindGVRs 查询gvr
 func FindGVRs(c *gin.Context) {
-	config, _ := client.GetRestConfig()
-	dc, _ := discovery.NewDiscoveryClientForConfig(config)
-	mapper := restmapper.NewDeferredDiscoveryRESTMapper(memory.NewMemCacheClient(dc))
-	gvk := schema.GroupVersionKind{Group: c.Query("group"), Version: c.Query("version"), Kind: c.Query("kind")}
+	clusterName := c.Param("clusterName")
+	group := c.Param("group")
+	version := c.Param("version")
+	kind := c.Param("kind")
 
-	mapping, err := mapper.RESTMappings(gvk.GroupKind(), gvk.Version)
-	fmt.Println(err)
-	for _, restMapping := range mapping {
-		fmt.Println(restMapping.Resource)
-	}
+	service.FindGVRs(clusterName, group, version, kind)
 }
 
 func getYamlData(c *gin.Context) (*unstructured.Unstructured, error) {

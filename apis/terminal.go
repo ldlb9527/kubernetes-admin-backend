@@ -34,13 +34,14 @@ func TerminalPod(c *gin.Context) {
 		wsConn.WsClose()
 		return
 	}
+	clusterName := c.Param("clusterName")
 	namespace := c.Param("namespace")
 	podName := c.Param("podName")
 	container := c.Param("container")
 
 	wsConn.WsWrite(websocket.TextMessage, []byte("你已进入 命名空间："+namespace+" 容器组："+podName+" 容器名："+container+"的终端"))
 
-	if err := terminal.StartProcess(wsConn, podName, namespace, container); err != nil {
+	if err := terminal.StartProcess(wsConn, clusterName, podName, namespace, container); err != nil {
 		fmt.Println("StartProcess err", err)
 		wsConn.WsClose()
 		return
