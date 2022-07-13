@@ -9,7 +9,8 @@ import (
 
 // GetAllPods 查询所有pods
 func GetAllPods(c *gin.Context) {
-	pods := service.GetPods()
+	clusterName := c.Param("clusterName")
+	pods := service.GetPods(clusterName)
 	c.JSON(http.StatusOK, (&proto.Result{}).Ok(200, pods, "查询成功"))
 }
 

@@ -9,7 +9,8 @@ import (
 
 // GetNamespaces 查询所有命名空间
 func GetNamespaces(c *gin.Context) {
-	namespaces, err := service.GetNamespaces()
+	clusterName := c.Param("clusterName")
+	namespaces, err := service.GetNamespaces(clusterName)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, (&proto.Result{}).Error(500, nil, err.Error()))
 		return
@@ -30,13 +31,14 @@ func GetNamespaces(c *gin.Context) {
 
 // CreateNamespace 创建命名空间
 func CreateNamespace(c *gin.Context) {
+	clusterName := c.Param("clusterName")
 	var nameSpace proto.NameSpace
 	if err := c.ShouldBind(&nameSpace); err != nil {
 		c.JSON(http.StatusInternalServerError, (&proto.Result{}).Error(500, nil, err.Error()))
 		return
 	}
 
-	namespace, err := service.CreateNamespace(nameSpace)
+	namespace, err := service.CreateNamespace(clusterName, nameSpace)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, (&proto.Result{}).Error(500, nil, err.Error()))
 		return
@@ -49,7 +51,8 @@ func CreateNamespace(c *gin.Context) {
 
 // DeleteNamespace 根据名称删除命名空间
 func DeleteNamespace(c *gin.Context) {
-	if err := service.DeleteNamespace(c.Param("name")); err != nil {
+	clusterName := c.Param("clusterName")
+	if err := service.DeleteNamespace(clusterName, c.Param("name")); err != nil {
 		c.JSON(http.StatusInternalServerError, (&proto.Result{}).Error(500, nil, err.Error()))
 		return
 	}
@@ -58,13 +61,14 @@ func DeleteNamespace(c *gin.Context) {
 
 // UpdateNamespace 修改命名空间
 func UpdateNamespace(c *gin.Context) {
+	clusterName := c.Param("clusterName")
 	var nameSpace proto.NameSpace
 	if err := c.ShouldBind(&nameSpace); err != nil {
 		c.JSON(http.StatusInternalServerError, (&proto.Result{}).Error(500, nil, err.Error()))
 		return
 	}
 
-	namespace, err := service.UpdateNamespace(nameSpace)
+	namespace, err := service.UpdateNamespace(clusterName, nameSpace)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, (&proto.Result{}).Error(500, nil, err.Error()))
 		return

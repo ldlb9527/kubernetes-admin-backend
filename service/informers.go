@@ -7,16 +7,13 @@ import (
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/klog"
-	"kubernetes-admin-backend/client"
 	"time"
 )
 
+// todo
 func Informers() {
-	clientSet, err := client.GetK8SClientSet()
-	if err != nil {
-		klog.Error(err)
-		return
-	}
+	cluster, _ := GetCluster("default")
+	clientSet := cluster.ClientSet
 	informerFactory := informers.NewSharedInformerFactory(clientSet, 30*time.Second)
 	deployInformer := informerFactory.Apps().V1().Deployments()
 	informer := deployInformer.Informer()
@@ -32,7 +29,7 @@ func Informers() {
 	informerFactory.Start(stopper)
 	// 等待所有的Informer缓存同步
 	informerFactory.WaitForCacheSync(stopper)
-	deployments, err := deployLister.Deployments("default").List(labels.Everything())
+	deployments, _ := deployLister.Deployments("default").List(labels.Everything())
 	//编辑deploy列表
 	for index, deployment := range deployments {
 		fmt.Printf("%d -> %s\n", index, deployment.Name)

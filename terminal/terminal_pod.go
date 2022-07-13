@@ -7,7 +7,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/remotecommand"
-	"kubernetes-admin-backend/client"
+	"kubernetes-admin-backend/service"
 	"net/http"
 	"sync"
 )
@@ -199,11 +199,12 @@ func (handler *streamHandler) Write(p []byte) (size int, err error) {
 	return
 }
 
-func StartProcess(wsConn *WsConnection, podName string, namespace string, container string) error {
+func StartProcess(wsConn *WsConnection, clusterName string, podName string, namespace string, container string) error {
 	cmd := []string{"/bin/sh"}
 	// URL:
 	// https://172.16.0.143:6443/api/v1/namespaces/default/pods/nginx-deployment-5cbd8757f-d5qvx/exec?command=sh&container=nginx&stderr=true&stdin=true&stdout=true&tty=true
-	clientSet, _ := client.GetK8SClientSet()
+	cluster, _ := service.GetCluster(clusterName)
+	clientSet := cluster.ClientSet
 	req := clientSet.CoreV1().RESTClient().Post().
 		Resource("pods").
 		Name(podName).
@@ -219,7 +220,7 @@ func StartProcess(wsConn *WsConnection, podName string, namespace string, contai
 		}, scheme.ParameterCodec)
 
 	// 创建到容器的连接
-	executor, err := remotecommand.NewSPDYExecutor(client.KubeConfig, "POST", req.URL())
+	executor, err := remotecommand.NewSPDYExecutor(cluster.Config, "POST", req.URL())
 	if err != nil {
 		return err
 	}

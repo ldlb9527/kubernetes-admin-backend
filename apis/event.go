@@ -8,7 +8,8 @@ import (
 )
 
 func ListEvent(c *gin.Context) {
+	clusterName := c.Param("clusterName")
 	namespace := c.DefaultQuery("namespace", "")
-	eventList := service.ListEvent(namespace)
+	eventList := service.ListEvent(clusterName, namespace)
 	c.JSON(http.StatusOK, (&proto.Result{}).Ok(200, eventList, "查询成功"))
 }

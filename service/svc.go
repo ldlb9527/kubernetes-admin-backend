@@ -4,12 +4,12 @@ import (
 	"context"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"kubernetes-admin-backend/client"
 	"kubernetes-admin-backend/proto"
 )
 
-func ListSvc(namespace, label string) []proto.Svc {
-	clientSet, _ := client.GetK8SClientSet()
+func ListSvc(clusterName, namespace, label string) []proto.Svc {
+	cluster, _ := GetCluster(clusterName)
+	clientSet := cluster.ClientSet
 	//TODO  将与svc同名的endpoint设置到proto.Svc
 	/*endpointsList, _ := clientSet.CoreV1().Endpoints(namespace).List(context.Background(), metav1.ListOptions{LabelSelector: label})
 	nameToEndPoints := make(map[string]v1.Endpoints)

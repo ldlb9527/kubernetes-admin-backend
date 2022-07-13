@@ -5,17 +5,13 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/klog"
-	"kubernetes-admin-backend/client"
 	"kubernetes-admin-backend/proto"
 )
 
-func GetNamespaces() ([]v1.Namespace, error) {
+func GetNamespaces(clusterName string) ([]v1.Namespace, error) {
 	ctx := context.Background()
-	clientSet, err := client.GetK8SClientSet()
-	if err != nil {
-		klog.Error(err)
-		return nil, err
-	}
+	cluster, _ := GetCluster(clusterName)
+	clientSet := cluster.ClientSet
 	namespaceList, err := clientSet.CoreV1().Namespaces().List(ctx, metav1.ListOptions{})
 	if err != nil {
 		klog.Error(err)
@@ -24,13 +20,10 @@ func GetNamespaces() ([]v1.Namespace, error) {
 	return namespaceList.Items, nil
 }
 
-func CreateNamespace(ns proto.NameSpace) (*v1.Namespace, error) {
+func CreateNamespace(clusterName string, ns proto.NameSpace) (*v1.Namespace, error) {
 	ctx := context.Background()
-	clientSet, err := client.GetK8SClientSet()
-	if err != nil {
-		klog.Error(err)
-		return nil, err
-	}
+	cluster, _ := GetCluster(clusterName)
+	clientSet := cluster.ClientSet
 
 	newNamespace, err := clientSet.CoreV1().Namespaces().Create(ctx, &v1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
@@ -47,27 +40,21 @@ func CreateNamespace(ns proto.NameSpace) (*v1.Namespace, error) {
 	return newNamespace, nil
 }
 
-func DeleteNamespace(nsName string) error {
+func DeleteNamespace(clusterName, nsName string) error {
 	ctx := context.Background()
-	clientSet, err := client.GetK8SClientSet()
-	if err != nil {
-		klog.Error(err)
-		return err
-	}
+	cluster, _ := GetCluster(clusterName)
+	clientSet := cluster.ClientSet
 	deletePolicy := metav1.DeletePropagationForeground
-	err = clientSet.CoreV1().Namespaces().Delete(ctx, nsName, metav1.DeleteOptions{
+	err := clientSet.CoreV1().Namespaces().Delete(ctx, nsName, metav1.DeleteOptions{
 		PropagationPolicy: &deletePolicy,
 	})
 	return err
 }
 
-func UpdateNamespace(nameSpace proto.NameSpace) (*v1.Namespace, error) {
+func UpdateNamespace(clusterName string, nameSpace proto.NameSpace) (*v1.Namespace, error) {
 	ctx := context.Background()
-	clientSet, err := client.GetK8SClientSet()
-	if err != nil {
-		klog.Error(err)
-		return nil, err
-	}
+	cluster, _ := GetCluster(clusterName)
+	clientSet := cluster.ClientSet
 
 	namespace := &v1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
