@@ -12,7 +12,7 @@ import (
 )
 
 func TestAddCluster(t *testing.T) {
-	bytes, err := ioutil.ReadFile("../config/.kube/config")
+	bytes, err := ioutil.ReadFile("../config/.kube/default/config")
 	if err != nil {
 		fmt.Println("ReadFile," + err.Error())
 	}
@@ -37,7 +37,7 @@ func TestAddCluster(t *testing.T) {
 }
 
 func TestFileToBytes(t *testing.T) {
-	file, err := os.Open("../config/.kube/config")
+	file, err := os.Open("../config/.kube/default/config")
 	if err != nil {
 		fmt.Println("Open," + err.Error())
 	}
