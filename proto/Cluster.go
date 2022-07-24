@@ -17,10 +17,10 @@ import (
 )
 
 type Cluster struct {
-	Name          string
-	Config        *rest.Config `json:"-"`
-	ClientSet     *kubernetes.Clientset
-	DynamicClient dynamic.Interface
+	Name          string                `json:"name"`
+	Config        *rest.Config          `json:"-"`
+	ClientSet     *kubernetes.Clientset `json:"-"`
+	DynamicClient dynamic.Interface     `json:"-"`
 }
 
 // ClusterStore 集群配置存储接口,不引入其他存储应用，默认实现存入项目路径中
